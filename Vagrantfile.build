@@ -1,0 +1,69 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # config.vm.box = "ubuntu/xenial64"
+  config.vm.box = "box-cutter/ubuntu1604-desktop"
+  
+  # config.vm.box_check_update = false
+  # config.vm.network "forwarded_port", guest: 80, host: 8080
+  # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+  # config.vm.network "private_network", ip: "192.168.33.10"
+  config.vm.network "public_network"
+  # config.vm.synced_folder "../data", "/vagrant_data"
+  config.ssh.forward_x11 = true
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = false
+    vb.memory = "2048"
+    vb.customize ["modifyvm", :id, "--usb", "on"]
+    vb.customize ['usbfilter', 'add', '0', '--target', :id, '--name', 'ESP', '--vendorid', '0x23a7', '--productid', '0x0010']
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo apt-get update
+    sudo apt-get install -y \
+      build-essential \
+      python python-dev \
+      aptitude apt-utils \
+      lsb-core \
+      sudo \
+      apt-transport-https \
+      ssh-client \
+      wget \
+      curl \
+      libcurl4-openssl-dev \
+      ca-certificates \
+      git \
+      libicu-dev \
+      'libicu[0-9][0-9].*' \
+      rlwrap \
+      zlib1g-dev \
+      libssl-dev \
+      libreadline-dev \
+      libyaml-dev \
+      libsqlite3-dev \
+      sqlite3 \
+      libxml2-dev \
+      libxslt1-dev \
+      libffi-dev \
+      alsa \
+      alsa-tools \
+      emacs \
+      audacity
+    DEBIAN_FRONTEND=noninteractive apt-get install -y xorg openbox
+    curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    sudo npm install -g grunt-cli
+    sudo npm install -g npm-cache
+    bash -c 'echo -e "deb http://archive.hark.jp/harkrepos xenial non-free\ndeb-src http://archive.hark.jp/harkrepos xenial non-free" > /etc/apt/sources.list.d/hark.list'
+    wget -q -O - http://archive.hark.jp/harkrepos/public.gpg | apt-key add -
+    apt-get update --fix-missing
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      harkfd \
+      harktool4 \
+      harktool5 \
+      hark-designer
+    hark_designer install
+  SHELL
+end
